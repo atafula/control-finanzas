@@ -177,14 +177,15 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .sheet.show{transform:none}
 .sheet-in{max-width:560px;min-height:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px;
   padding:8px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 12px) max(16px,env(safe-area-inset-left,0px))}
-.grab{width:38px;height:5px;border-radius:3px;background:var(--line);margin:0 auto;flex:none}
+.grab{position:relative;width:118px;height:17px;margin:-6px auto 0;flex:none;cursor:grab}
+.grab::after{content:"";position:absolute;left:40px;right:40px;top:6px;height:5px;border-radius:3px;background:var(--line)}
+.sheet{box-shadow:0 -1px 0 var(--line),0 -12px 40px rgba(0,0,0,.18)}
+.sheet .grab,.sheet .shead,#sheet .amount{touch-action:none} /* aquí el dedo arrastra la hoja, no la página */
 .shead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .shead h3{font-size:17px;font-weight:600}
 .round{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--ink-2);flex:none}
 .side{width:72px;display:flex}
 .side.r{justify-content:flex-end}
-.del{font-size:13.5px;font-weight:600;color:var(--bad);padding:7px 11px;border-radius:999px;background:color-mix(in srgb,var(--bad) 12%,transparent)}
-.del.armed{background:var(--bad);color:var(--surface)}
 .typeseg{display:flex;background:var(--surface-2);border-radius:12px;padding:3px;width:200px}
 .typeseg button{flex:1;text-align:center;font-size:14px;font-weight:600;padding:7px 0;border-radius:9px;color:var(--muted)}
 .typeseg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -233,7 +234,14 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .key{height:48px;display:grid;place-items:center;font-size:22px;font-weight:500;border-radius:12px;color:var(--ink)}
 .key:active{background:var(--surface-2)}
 .key svg{width:22px;height:22px}
-.save{height:54px;border-radius:16px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;gap:8px;flex:none;width:100%}
+.actions{display:flex;gap:10px;flex:none}
+.sheet-in>.save{flex:none} /* fuera de la fila de botones, «Guardar»/«Añadir categoría» no se estira ni se aplasta */
+.save{height:54px;border-radius:16px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;gap:8px;flex:1;min-width:0;width:100%}
+/* Borrar: cuadrado con papelera junto a Guardar; al pulsarlo pregunta «¿Seguro?» */
+.del{flex:none;min-width:54px;height:54px;padding:0 16px;border-radius:16px;display:grid;place-items:center;white-space:nowrap;font-size:15px;font-weight:600;color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent);transition:background .15s}
+.del svg{width:22px;height:22px}
+.del:not(.armed){padding:0}
+.del.armed{background:var(--bad);color:#fff}
 .save svg{width:20px;height:20px}
 .is-ingreso .save{background:var(--inc)}
 .save:disabled{opacity:.4}

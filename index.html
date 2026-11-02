@@ -112,11 +112,11 @@
     <div class="grab"></div>
     <h3 class="sr" id="sheetTitle">Nuevo gasto</h3>
     <div class="shead">
-      <div class="side"><button type="button" class="round" id="close" aria-label="Cerrar"></button></div>
+      <div class="side"></div>
       <div class="typeseg" role="group" aria-label="Tipo">
         <button type="button" id="typeGasto" aria-pressed="true">Gasto</button><button type="button" id="typeIngreso" aria-pressed="false">Ingreso</button>
       </div>
-      <div class="side r"><button type="button" class="del" id="del" hidden>Borrar</button></div>
+      <div class="side r"></div>
     </div>
     <input id="importe" type="hidden">
     <div class="amount" id="amountBox"><div class="v num" id="amountView"></div></div>
@@ -138,7 +138,10 @@
       <button type="button" class="key" data-k="7">7</button><button type="button" class="key" data-k="8">8</button><button type="button" class="key" data-k="9">9</button>
       <button type="button" class="key" data-k=",">,</button><button type="button" class="key" data-k="0">0</button><button type="button" class="key" data-k="del" aria-label="Borrar"></button>
     </div>
-    <button type="submit" class="save" id="save" disabled>Guardar</button>
+    <div class="actions">
+      <button type="button" class="del" id="del" aria-label="Borrar" hidden></button>
+      <button type="submit" class="save" id="save" disabled>Guardar</button>
+    </div>
   </form>
 </div>
 
@@ -146,7 +149,7 @@
 <div class="sheet small" id="catSheet" role="dialog" aria-modal="true" hidden>
   <div class="sheet-in">
     <div class="grab"></div>
-    <div class="shead"><h3>Categorías</h3><button type="button" class="round" id="closeCatsBtn" aria-label="Cerrar"></button></div>
+    <div class="shead"><h3>Categorías</h3></div>
     <div class="card" id="catList"></div>
     <button class="save" id="addCatBtn">+ Añadir categoría</button>
   </div>
@@ -156,7 +159,7 @@
 <div class="sheet small" id="settingsSheet" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
   <div class="sheet-in">
     <div class="grab"></div>
-    <div class="shead"><h3 id="settingsTitle">Ajustes</h3><button type="button" class="round" id="closeSettings" aria-label="Cerrar"></button></div>
+    <div class="shead"><h3 id="settingsTitle">Ajustes</h3></div>
     <div class="sec"><h4>Apariencia</h4>
       <div class="seg"><button type="button" data-tema="auto" aria-pressed="true">Automático</button><button type="button" data-tema="light" aria-pressed="false">Claro</button><button type="button" data-tema="dark" aria-pressed="false">Oscuro</button></div>
     </div>

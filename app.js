@@ -252,7 +252,7 @@ function openSheet(g){
   selCat=g?g.categoria:null;catManual=false;
   fijoOn=!!(g&&g.fijo);extraOn=!!(g&&g.extra);
   setTipo(g&&isIngreso(g)?"ingreso":"gasto",true);
-  $("del").hidden=!g;$("del").classList.remove("armed");$("del").textContent="Borrar";
+  $("del").hidden=!g;$("del").classList.remove("armed");$("del").innerHTML=ico("trash-2");
   showSheet("sheet");
 }
 function closeSheet(){document.activeElement&&document.activeElement.blur();hideSheet("sheet")}
@@ -332,10 +332,28 @@ $("dAyer").onclick=()=>setFecha(addDaysISO(todayISO(),-1));
 $("fecha").addEventListener("click",e=>{try{e.currentTarget.showPicker()}catch(err){}});
 $("fecha").addEventListener("input",markFecha);$("fecha").addEventListener("change",markFecha);
 $("fab").onclick=()=>openSheet(null);
-$("close").onclick=closeSheet;
+/* Cerrar las hojas (añadir/editar, Ajustes y Categorías) deslizándolas hacia abajo */
+function swipeToClose(sh,close){let st=null,drag=false,dy=0,lastDrag=-1e9;
+ const end=()=>{st=null;drag=false};
+ sh.addEventListener("pointerdown",e=>{
+   if(sh.hidden||sh.scrollTop>0||(e.pointerType==="mouse"&&e.button!==0)||e.target.closest("input"))return;
+   st={x:e.clientX,y:e.clientY,t:performance.now(),id:e.pointerId};dy=0;drag=false});
+ sh.addEventListener("pointermove",e=>{
+   if(!st||e.pointerId!==st.id)return;const mx=e.clientX-st.x,my=e.clientY-st.y;
+   if(!drag){if(Math.abs(mx)>10&&Math.abs(mx)>Math.abs(my)){end();return} // gesto lateral (categorías): no es para cerrar
+     if(my<-10){end();return}
+     if(my>10){drag=true;sh.style.transition="none";try{sh.setPointerCapture(e.pointerId)}catch(err){}}else return}
+   dy=Math.max(0,my);sh.style.transform=`translateY(${dy}px)`;e.preventDefault()});
+ const up=e=>{
+   if(!st||e.pointerId!==st.id)return;
+   if(drag){const v=dy/Math.max(1,performance.now()-st.t);lastDrag=performance.now();sh.style.transition="";
+     if(dy>110||(dy>40&&v>.6))close();sh.style.transform=""}
+   end()};
+ sh.addEventListener("pointerup",up);sh.addEventListener("pointercancel",up);
+ // Que el arrastre no cuente como toque en un botón
+ sh.addEventListener("click",e=>{if(performance.now()-lastDrag<300){e.stopPropagation();e.preventDefault()}},true);}
 $("scrim").onclick=()=>{if(!$("catSheet").hidden)closeCatsSheet();else if(!$("settingsSheet").hidden)closeSettings();else closeSheet()};
 $("editCatsBtn").onclick=()=>openCatsSheet();
-$("closeCatsBtn").onclick=closeCatsSheet;
 $("catsMore").onclick=()=>{catsExpanded=!catsExpanded;render()};
 $("addCatBtn").onclick=()=>{
   const next=ALL_COLORS.find(c=>!CATS.some(x=>x[1]===c))||ALL_COLORS[CATS.length%ALL_COLORS.length];
@@ -405,7 +423,7 @@ function renderFijosList(){
 function openSettings(){renderFijosList();showSheet("settingsSheet")}
 function closeSettings(){hideSheet("settingsSheet")}
 $("settingsBtn").onclick=openSettings;
-$("closeSettings").onclick=closeSettings;
+swipeToClose($("sheet"),closeSheet);swipeToClose($("settingsSheet"),closeSettings);swipeToClose($("catSheet"),closeCatsSheet);
 document.querySelectorAll("[data-tema]").forEach(b=>b.onclick=()=>{const t=b.dataset.tema;try{localStorage.setItem(TEMA_KEY,t)}catch(e){}applyTema(t)});
 
 /* Pantalla Movimientos */

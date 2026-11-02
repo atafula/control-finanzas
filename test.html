@@ -110,9 +110,12 @@ async function openApp(cfg={}){
     remove:async name=>{await A.click(A.item(name));await A.click("del");await A.click("del",350)},
     catInputs:()=>[...d.querySelectorAll("#catList .cat-name")],
     renameCat:async(from,to)=>{await A.click("editCatsBtn");const i=A.catInputs().find(i=>i.value===from);if(!i)throw new Error("no hay categoría "+from);
-      i.value=to;i.dispatchEvent(new w.Event("change"));await sleep(250);await A.click("closeCatsBtn",300)},
+      i.value=to;i.dispatchEvent(new w.Event("change"));await sleep(250);await A.click("scrim",300)},
     keys:async seq=>{for(const k of seq){const b=d.querySelector(`.key[data-k="${k}"]`);if(!b)throw new Error("no hay tecla "+k);b.click();await sleep(15)}},
     amount:()=>$("amountView").textContent,
+    // Arrastra con el dedo dentro de la hoja: desde el elemento "el", dx y dy píxeles, en "ms" milisegundos
+    drag:async(el,dx,dy,ms=300)=>{const r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,P=(t,X,Y)=>el.dispatchEvent(new w.PointerEvent(t,{bubbles:true,cancelable:true,pointerId:7,pointerType:"touch",isPrimary:true,clientX:X,clientY:Y}));
+      P("pointerdown",x,y);const n=6;for(let i=1;i<=n;i++){await sleep(ms/n);P("pointermove",x+dx*i/n,y+dy*i/n)}P("pointerup",x+dx,y+dy);await sleep(400)},
     rowText:el=>el.textContent.replace(/\s+/g," ").trim(),
     fijos:()=>A.json("mis-gastos-fijos")||[],
     importFile:async data=>{const dt=new w.DataTransfer();dt.items.add(new w.File([JSON.stringify(data)],"copia.json",{type:"application/json"}));
@@ -213,7 +216,7 @@ async function runAppTests(){
     for(let i=0;i<30;i++){const d=A.d.querySelector("#catList .cat-del:not([disabled])");if(!d)break;d.click();await A.wait(20);
       const s=A.d.querySelector("#catList .cat-del.armed");if(s){s.click();await A.wait(40)}}
     eq("queda una",A.cats().length,1);ok("su botón está desactivado",A.d.querySelector("#catList .cat-del").disabled);
-    await A.click("closeCatsBtn",300);await A.add("1",A.cats()[0][0]);eq("se puede seguir añadiendo",A.local().length,1);});
+    await A.click("scrim",300);await A.add("1",A.cats()[0][0]);eq("se puede seguir añadiendo",A.local().length,1);});
   await T("categorías repetidas en el móvil se limpian",{firebase:false,store:{"mis-gastos-cats":JSON.stringify([["A","--c1"],["A","--c2"],["B","--c3"]])}},async A=>{
     eq("chips",[...A.d.querySelectorAll("#chips .chip")].map(c=>c.textContent),["A","B"]);});
   await T("guardar con un filtro de otra categoría lo quita",{firebase:false,store:store([G("a","Pan",2,"Súper")])},async A=>{
@@ -233,7 +236,7 @@ async function runAppTests(){
   section("app — categorías");
   await T("añadir categoría",{firebase:false},async A=>{
     const n=A.cats().length;await A.click("editCatsBtn");await A.click("addCatBtn",150);
-    eq("una más",A.cats().length,n+1);await A.click("closeCatsBtn",300);ok("aparece en el formulario",[...A.d.querySelectorAll("#chips .chip")].some(c=>c.textContent==="Nueva categoría"));});
+    eq("una más",A.cats().length,n+1);await A.click("scrim",300);ok("aparece en el formulario",[...A.d.querySelectorAll("#chips .chip")].some(c=>c.textContent==="Nueva categoría"));});
   await T("renombrar actualiza los gastos",{firebase:false,store:store([G("a","Pan",2,"Súper")])},async A=>{
     await A.renameCat("Súper","Supermercado");eq("gasto",A.local()[0].categoria,"Supermercado");ok("lista de categorías",A.cats().some(c=>c[0]==="Supermercado")&&!A.cats().some(c=>c[0]==="Súper"));});
   await T("renombrar con el filtro puesto",{firebase:false,store:store([G("a","Pan",2,"Súper")])},async A=>{
@@ -250,7 +253,7 @@ async function runAppTests(){
     ok("aún existe",A.cats().some(c=>c[0]==="Regalos"));row=A.catInputs().find(i=>i.value==="Regalos").parentElement;
     await A.click(row.querySelector(".cat-del"),150);ok("borrada",!A.cats().some(c=>c[0]==="Regalos"));});
   await T("un color de categoría manipulado no ejecuta código",{firebase:false,store:{"mis-gastos-cats":JSON.stringify([["Otros",'--c1)"><img src=x onerror="window.__hack=1">']])}},async A=>{
-    await A.wait(200);await A.click("fab");await A.click("close");await A.click("editCatsBtn");await A.wait(150);ok("no se ejecuta",!A.w.__hack);eq("color neutro",A.cats()[0]?A.cats()[0][1]:"--c8","--c8");});
+    await A.wait(200);await A.click("fab");await A.click("scrim",300);await A.click("editCatsBtn");await A.wait(150);ok("no se ejecuta",!A.w.__hack);eq("color neutro",A.cats()[0]?A.cats()[0][1]:"--c8","--c8");});
   await T("color manipulado desde la nube",{user:"u",store:LOGGED("u"),db:{"users/u":{cats:[{n:"X",c:'--c1)"><img src=x onerror="window.__hack=1">'}],catsText:"X"}}},async A=>{
     await A.wait(250);await A.add("1","X");await A.click("editCatsBtn");await A.wait(150);ok("no se ejecuta",!A.w.__hack);});
   await T("categorías estropeadas en el móvil",{firebase:false,store:{"mis-gastos-cats":'{"roto":1}'}},async A=>{
@@ -431,6 +434,58 @@ async function runAppTests(){
     await A.click(b);eq("pide confirmación",A.fijos().length,1);await A.click(A.d.querySelector('#fijosList [data-quitar="f1"]'),150);eq("quitado",A.fijos().length,0);});
 
   section("app — Movimientos, sugerencia y ajustes");
+  await T("«Añadir categoría» no se aplasta",{firebase:false},async A=>{
+    await A.click("editCatsBtn",350);eq("altura normal",Math.round(A.$("addCatBtn").getBoundingClientRect().height),54);});
+  await T("Categorías no tiene X",{firebase:false},async A=>{await A.click("editCatsBtn",350);ok("sin botón cerrar",!A.$("closeCatsBtn")&&!A.d.querySelector("#catSheet .round"));});
+  await T("deslizar hacia abajo cierra Categorías",{firebase:false},async A=>{
+    await A.click("editCatsBtn",350);await A.drag(A.d.querySelector("#catSheet .grab"),0,220);ok("cerrada",A.$("catSheet").hidden);});
+  await T("en Categorías un arrastre corto vuelve a su sitio",{firebase:false},async A=>{
+    await A.click("editCatsBtn",350);await A.drag(A.d.querySelector("#catSheet .grab"),0,40,600);ok("sigue abierta",!A.$("catSheet").hidden);
+    eq("sin desplazar",A.$("catSheet").style.transform,"");});
+  await T("arrastrar sobre «Añadir categoría» no la añade",{firebase:false},async A=>{
+    await A.click("editCatsBtn",350);const n=A.cats().length;await A.drag(A.$("addCatBtn"),0,60,600);eq("igual",A.cats().length,n);});
+  await T("al abrir Categorías el fondo se oscurece entero",{firebase:false},async A=>{
+    await A.click("editCatsBtn",350);const cs=A.w.getComputedStyle(A.$("scrim")),bg=cs.backgroundColor;ok("velo oscuro uniforme: "+bg,/^rgba\(\d+, \d+, \d+, 0\.4/.test(bg)&&cs.backgroundImage==="none");});
+  await T("Ajustes no tiene X",{firebase:false},async A=>{await A.click("settingsBtn",350);ok("sin botón cerrar",!A.$("closeSettings")&&!A.d.querySelector("#settingsSheet .round"));});
+  await T("deslizar hacia abajo cierra Ajustes",{firebase:false},async A=>{
+    await A.click("settingsBtn",350);await A.drag(A.d.querySelector("#settingsSheet .grab"),0,220);ok("cerrada",A.$("settingsSheet").hidden);});
+  await T("deslizar desde el título de Ajustes también cierra",{firebase:false},async A=>{
+    await A.click("settingsBtn",350);await A.drag(A.$("settingsTitle"),0,220);ok("cerrada",A.$("settingsSheet").hidden);});
+  await T("en Ajustes un arrastre corto vuelve a su sitio",{firebase:false},async A=>{
+    await A.click("settingsBtn",350);await A.drag(A.d.querySelector("#settingsSheet .grab"),0,40,600);ok("sigue abierta",!A.$("settingsSheet").hidden);
+    eq("sin desplazar",A.$("settingsSheet").style.transform,"");});
+  await T("arrastrar sobre un botón de Ajustes no lo pulsa",{firebase:false},async A=>{
+    await A.click("settingsBtn",350);const b=A.d.querySelector('[data-tema="dark"]');await A.drag(b,0,60,600);
+    ok("tema sin cambiar",!A.d.documentElement.hasAttribute("data-theme"));});
+  await T("al abrir Ajustes el fondo se oscurece entero",{firebase:false},async A=>{
+    await A.click("settingsBtn",350);const cs=A.w.getComputedStyle(A.$("scrim")),bg=cs.backgroundColor;ok("velo oscuro uniforme: "+bg,/^rgba\(\d+, \d+, \d+, 0\.4/.test(bg)&&cs.backgroundImage==="none");
+    await A.click("scrim",350);ok("tocar fuera sigue cerrando",A.$("settingsSheet").hidden);});
+  await T("la hoja de añadir no tiene X",{firebase:false},async A=>{await A.click("fab",350);ok("sin botón cerrar",!A.$("close")&&!A.d.querySelector("#sheet .round"));});
+  await T("deslizar hacia abajo cierra la hoja",{firebase:false},async A=>{
+    await A.click("fab",350);await A.drag(A.d.querySelector("#sheet .grab"),0,220);ok("cerrada",A.$("sheet").hidden);});
+  await T("deslizar desde el importe también cierra",{firebase:false},async A=>{
+    await A.click("fab",350);await A.drag(A.$("amountBox"),0,220);ok("cerrada",A.$("sheet").hidden);});
+  await T("un arrastre corto vuelve a su sitio",{firebase:false},async A=>{
+    await A.click("fab",350);await A.drag(A.d.querySelector("#sheet .grab"),0,40,600);ok("sigue abierta",!A.$("sheet").hidden);
+    eq("sin desplazar",A.$("sheet").style.transform,"");});
+  await T("un gesto rápido hacia abajo cierra aunque sea corto",{firebase:false},async A=>{
+    await A.click("fab",350);await A.drag(A.d.querySelector("#sheet .grab"),0,70,60);ok("cerrada",A.$("sheet").hidden);});
+  await T("deslizar a los lados en las categorías no cierra",{firebase:false},async A=>{
+    await A.click("fab",350);await A.drag(A.d.querySelector("#chips .chip"),-200,30);ok("sigue abierta",!A.$("sheet").hidden);});
+  await T("arrastrar desde el teclado no escribe números",{firebase:false},async A=>{
+    await A.click("fab",350);const k=A.d.querySelector('.key[data-k="5"]');await A.drag(k,0,60,600);k.click();
+    eq("solo el toque cuenta",A.$("importe").value,"5");});
+  await T("al abrir, el fondo se oscurece entero, como al principio",{firebase:false},async A=>{
+    await A.click("fab",350);const cs=A.w.getComputedStyle(A.$("scrim")),bg=cs.backgroundColor;ok("velo oscuro uniforme: "+bg,/^rgba\(\d+, \d+, \d+, 0\.4/.test(bg)&&cs.backgroundImage==="none");
+    await A.click("scrim",350);ok("tocar fuera sigue cerrando",A.$("sheet").hidden);});
+  await T("«Borrar» va abajo, junto a «Guardar»",{firebase:false,store:store([G("a","Pan",2,"Súper")])},async A=>{
+    await A.click(A.item("Pan"),350);const del=A.$("del"),save=A.$("save");
+    eq("en la misma fila que Guardar",del.parentElement,save.parentElement);ok("fuera de la cabecera",!del.closest(".shead"));
+    eq("se entiende sin texto",del.getAttribute("aria-label"),"Borrar");
+    let d=del.getBoundingClientRect(),g=save.getBoundingClientRect();ok("a la izquierda de Guardar",d.right<=g.left);ok("misma altura",Math.abs(d.height-g.height)<1);
+    await A.click("del");d=del.getBoundingClientRect();g=save.getBoundingClientRect();
+    eq("pregunta",del.textContent,"¿Seguro?");ok("no se monta encima de Guardar",d.right<=g.left);ok("el texto cabe",del.scrollWidth<=del.clientWidth+1);
+    await A.click("scrim",350);await A.click("fab",350);ok("al añadir no aparece",A.$("del").hidden);});
   await T("sin barra de scroll a la derecha",{firebase:false},async A=>{
     eq("página",A.w.getComputedStyle(A.d.documentElement).scrollbarWidth,"none");
     eq("Movimientos",A.w.getComputedStyle(A.$("movsView")).scrollbarWidth,"none");
