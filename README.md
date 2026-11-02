@@ -1,4 +1,4 @@
-# Mis Gastos
+# Control de finanzas
 
 > Apunta tus gastos e ingresos en segundos. Sin suscripciones, sin rastreos, sin complicaciones.
 
