@@ -40,6 +40,9 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 button:disabled{cursor:default}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
+/* Sin barra de scroll a la derecha (la página, Movimientos y las hojas siguen desplazándose igual) */
+html,.view,.sheet{scrollbar-width:none;-ms-overflow-style:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar,.view::-webkit-scrollbar,.sheet::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}
 .num{font-variant-numeric:tabular-nums}
 .pos{color:var(--inc)} .neg{color:var(--bad)}
 svg.i{width:20px;height:20px;stroke-width:1.9;flex:none;display:block}
@@ -118,6 +121,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:repeating-linear-gradient(135deg,var(--accent) 0 2px,transparent 2px 4px)}
 
 /* Categorías y filas */
+.cats-card{overflow:hidden} /* que la fila seleccionada respete las esquinas redondeadas */
 .cats-card .ctitle{padding:16px 16px 0}
 .stack{display:flex;gap:3px;height:8px;margin:14px 16px 6px}
 .stack:empty{display:none}
@@ -155,7 +159,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .view.show{transform:none;visibility:visible}
 .view::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(circle,var(--dot) 2.7px,transparent 3.1px);background-size:11px 11px;background-position:3px 3px;
   -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 56px),radial-gradient(500px 1000px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);-webkit-mask-composite:source-in;
-          mask-image:linear-gradient(to bottom,transparent 0,#000 56px),radial-gradient(500px 1000px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);mask-composite:intersect;}
+          mask-image:linear-gradient(to bottom,transparent 0,#000 56px),radial-gradient(500px 1000px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);mask-composite:intersect;opacity:var(--mdots,1)}
 .ptitle{font-size:28px;font-weight:700;letter-spacing:-.02em;padding:4px 4px 0}
 .msum{display:flex;gap:14px;padding:0 4px;font-size:13px;color:var(--muted)}
 .msum b{font-weight:600}

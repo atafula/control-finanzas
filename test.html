@@ -431,6 +431,22 @@ async function runAppTests(){
     await A.click(b);eq("pide confirmación",A.fijos().length,1);await A.click(A.d.querySelector('#fijosList [data-quitar="f1"]'),150);eq("quitado",A.fijos().length,0);});
 
   section("app — Movimientos, sugerencia y ajustes");
+  await T("sin barra de scroll a la derecha",{firebase:false},async A=>{
+    eq("página",A.w.getComputedStyle(A.d.documentElement).scrollbarWidth,"none");
+    eq("Movimientos",A.w.getComputedStyle(A.$("movsView")).scrollbarWidth,"none");
+    eq("hojas",A.w.getComputedStyle(A.$("sheet")).scrollbarWidth,"none");});
+  await T("la categoría seleccionada no se sale de las esquinas redondeadas",{firebase:false,store:store([G("a","Cerves",11,"Salidas y fiesta")])},async A=>{
+    const row=A.d.querySelector(".cat-row");await A.click(row);
+    const card=A.d.querySelector(".cats-card"),cs=A.w.getComputedStyle(card),r=A.d.querySelector(".cat-row.on");
+    ok("fila seleccionada",!!r);ok("la tarjeta tiene esquinas redondeadas",parseFloat(cs.borderBottomLeftRadius)>0);
+    eq("y recorta lo que sobresale",cs.overflow,"hidden");});
+  await T("en Movimientos los puntitos se apagan al bajar y vuelven al abrir",{firebase:false,store:store(Array.from({length:40},(_,i)=>G("m"+i,"Mov "+i,1,"Otros",TODAY,i)))},async A=>{
+    const v=A.$("movsView"),dots=()=>v.style.getPropertyValue("--mdots");
+    await A.click("seeAll",350);eq("al abrir, enteros",dots(),"1.000");
+    v.scrollTop=160;v.dispatchEvent(new A.w.Event("scroll"));await A.wait(80);eq("a mitad",dots(),"0.500");
+    v.scrollTop=2000;v.dispatchEvent(new A.w.Event("scroll"));await A.wait(80);eq("del todo abajo, apagados",dots(),"0.000");
+    await A.click("movsBack",350);await A.click("seeAll",350);eq("al volver a abrir, enteros",dots(),"1.000");
+    eq("el fondo usa la variable",A.w.getComputedStyle(v,"::before").opacity,"1");});
   await T("«Ver todos» abre Movimientos con filtros",{firebase:false,store:store([G("a","Pan",2,"Súper"),I("i","Paga",120,"Paga")])},async A=>{
     await A.click("seeAll",350);ok("abierta",A.$("movsView").classList.contains("show"));ok("resumen",A.text("msum").includes("+120,00 €"));
     eq("todos",A.d.querySelectorAll("#movsList .item").length,2);await A.click(A.d.querySelector('#movsFilters [data-f="ingresos"]'));

@@ -409,7 +409,7 @@ $("closeSettings").onclick=closeSettings;
 document.querySelectorAll("[data-tema]").forEach(b=>b.onclick=()=>{const t=b.dataset.tema;try{localStorage.setItem(TEMA_KEY,t)}catch(e){}applyTema(t)});
 
 /* Pantalla Movimientos */
-function openMovs(){movsOpen=true;const v=$("movsView");v.classList.add("show");v.setAttribute("aria-hidden","false");v.scrollTop=0;document.body.style.overflow="hidden";renderMovs()}
+function openMovs(){movsOpen=true;const v=$("movsView");v.classList.add("show");v.setAttribute("aria-hidden","false");v.scrollTop=0;v.style.setProperty("--mdots","1.000");document.body.style.overflow="hidden";renderMovs()}
 function closeMovs(){movsOpen=false;const v=$("movsView");v.classList.remove("show");v.setAttribute("aria-hidden","true");document.body.style.overflow=""}
 function renderMovs(){
   $("mvLabel").textContent=monthTitle(month);$("mvNext").disabled=month>=curMonth();
@@ -442,6 +442,9 @@ document.querySelector('.key[data-k="del"]').innerHTML=ico("delete");
 /* Fondo de puntitos: se apaga al bajar */
 {let p=false;const f=()=>{p=false;document.documentElement.style.setProperty("--dots",(1-Math.min(window.scrollY/320,1)).toFixed(3))};
  window.addEventListener("scroll",()=>{if(!p){p=true;requestAnimationFrame(f)}},{passive:true})}
+/* En Movimientos el scroll es de la propia pantalla (no de la página): también se apagan */
+{const v=$("movsView");let p=false;const f=()=>{p=false;v.style.setProperty("--mdots",(1-Math.min(v.scrollTop/320,1)).toFixed(3))};
+ v.addEventListener("scroll",()=>{if(!p){p=true;requestAnimationFrame(f)}},{passive:true});f()}
 
 buildChips();
 
