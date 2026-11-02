@@ -113,3 +113,14 @@ control-finanzas/
 **Colores:** cada categoría lleva un color (`--c0`…`--c10` para gastos e `--i0`…`--i4` para ingresos, en `style.css`).
 
 **Después de cambiar archivos:** sube la versión del caché en `sw.js` (`mis-gastos-v24`, `v25`…) para que los móviles cojan los cambios.
+
+---
+
+## Licencia
+
+[PolyForm Noncommercial 1.0.0](LICENSE): puedes usarla, modificarla y compartirla gratis, pero no venderla ni usarla con fines comerciales.
+
+### Componentes de terceros
+
+- Fuente [Geist](https://github.com/vercel/geist-font), © Vercel, licencia SIL OFL 1.1 (`fonts/Geist-OFL.txt`)
+- Iconos [Lucide](https://lucide.dev), © Lucide Contributors, licencia ISC
