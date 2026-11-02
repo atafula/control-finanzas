@@ -1,6 +1,6 @@
 {
-  "name": "Mis Gastos",
-  "short_name": "Gastos",
+  "name": "Mis Finanzas",
+  "short_name": "Finanzas",
   "lang": "es",
   "start_url": "./",
   "scope": "./",

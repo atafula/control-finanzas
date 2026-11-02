@@ -46,7 +46,7 @@ svg.i{width:20px;height:20px;stroke-width:1.9;flex:none;display:block}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* Fondo de puntitos: fijo en la pantalla y se apaga al bajar (app.js cambia --dots) */
-body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+body::before{content:"";position:fixed;inset:-120px 0 0 0;;z-index:0;pointer-events:none;
   background-image:radial-gradient(circle,var(--dot) 2.7px,transparent 3.1px);background-size:11px 11px;background-position:3px 3px;
   -webkit-mask-image:radial-gradient(500px 1000px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);
           mask-image:radial-gradient(500px 1000px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);
