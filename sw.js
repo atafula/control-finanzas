@@ -1,6 +1,6 @@
 // Guarda la app en caché para que funcione sin conexión.
 // Si cambias algún archivo, sube el número de versión para que el móvil coja los cambios.
-const CACHE = "mis-gastos-v23";
+const CACHE = "control-finanzas-v1";
 const FILES = ["./", "index.html", "style.css", "utils.js", "icons.js", "app.js", "manifest.json", "icon-180.png", "icon-192.png", "icon-512.png",
   "fonts/fonts.css", "fonts/Geist-Regular.woff2", "fonts/Geist-Medium.woff2", "fonts/Geist-SemiBold.woff2", "fonts/Geist-Bold.woff2",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js",

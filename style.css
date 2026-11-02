@@ -48,8 +48,8 @@ svg.i{width:20px;height:20px;stroke-width:1.9;flex:none;display:block}
 /* Fondo de puntitos: fijo en la pantalla y se apaga al bajar (app.js cambia --dots) */
 body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:radial-gradient(circle,var(--dot) 2.7px,transparent 3.1px);background-size:11px 11px;background-position:3px 3px;
-  -webkit-mask-image:radial-gradient(700px 1270px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);
-          mask-image:radial-gradient(700px 1270px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);
+  -webkit-mask-image:radial-gradient(500px 1000px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);
+          mask-image:radial-gradient(500px 1000px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);
   opacity:var(--dots)}
 
 .wrap{position:relative;z-index:1;max-width:560px;margin:0 auto;padding-block:8px calc(env(safe-area-inset-bottom,0px) + 110px);
@@ -154,8 +154,8 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   transform:translateX(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);visibility:hidden}
 .view.show{transform:none;visibility:visible}
 .view::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(circle,var(--dot) 2.7px,transparent 3.1px);background-size:11px 11px;background-position:3px 3px;
-  -webkit-mask-image:radial-gradient(700px 1270px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);
-          mask-image:radial-gradient(700px 1270px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%)}
+  -webkit-mask-image:radial-gradient(500px 1000px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%);
+          mask-image:radial-gradient(500px 1000px at min(100%, calc(50% + 280px)) 0,#000 0%,rgba(0,0,0,.85) 30%,rgba(0,0,0,.3) 55%,transparent 75%)}
 .ptitle{font-size:28px;font-weight:700;letter-spacing:-.02em;padding:4px 4px 0}
 .msum{display:flex;gap:14px;padding:0 4px;font-size:13px;color:var(--muted)}
 .msum b{font-weight:600}
