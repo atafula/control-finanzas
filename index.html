@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Mis Gastos</title>
+<meta name="theme-color" content="#F4F5F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0D11" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Gastos">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/svg+xml" href="icon-192.svg">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="style.css">
+<script>try{const t=localStorage.getItem("mis-gastos-tema");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<div class="wrap" id="home">
+  <div class="top">
+    <div class="mpick">
+      <button class="mbtn" id="prev" aria-label="Anterior"></button>
+      <span id="monthLabel">—</span>
+      <button class="mbtn" id="next" aria-label="Siguiente"></button>
+    </div>
+    <div class="top-r">
+      <button class="ib" id="searchToggle" aria-label="Buscar"></button>
+      <button class="ib" id="statsToggle" aria-label="Resumen del año" aria-pressed="false"></button>
+      <button class="ib" id="settingsBtn" aria-label="Ajustes"></button>
+    </div>
+  </div>
+  <div class="search-wrap" id="searchWrap">
+    <div class="searchbox"><span id="searchIco"></span><input id="searchInput" placeholder="Buscar en todos los meses…" enterkeyhint="search" autocomplete="off"></div>
+  </div>
+
+  <section class="hero">
+    <div class="eyebrow"><span id="heroLabel">Gastado este mes</span><span class="status" id="status"></span></div>
+    <div class="total num" id="total">0<span class="cent">,00</span><span class="eur">€</span></div>
+    <div class="pills num" id="sub"></div>
+  </section>
+
+  <section class="card flow" id="flowCard">
+    <div class="ctitle"><h3 id="flowTitle">Ingresos y gastos</h3><button class="link" id="flowDetail">Detalle</button></div>
+    <div class="flow-cols">
+      <div class="fc in"><div class="l"><span id="flowInIco"></span>Ingresos</div><div class="v num pos" id="flowIn">+0,00 €</div></div>
+      <div class="fc out"><div class="l"><span id="flowOutIco"></span>Gastos</div><div class="v num" id="flowOut">−0,00 €</div></div>
+    </div>
+    <div class="cmp" aria-hidden="true"><div class="in" id="cmpIn"></div><div class="out" id="cmpOut"></div></div>
+    <div class="balance"><span>Balance <span id="balanceWhen">del mes</span></span><b class="num" id="balance">0,00 €</b></div>
+    <div class="hint" id="balanceHint">Sin extraordinarios: <b class="num" id="balanceNormal">0,00 €</b></div>
+  </section>
+
+  <section class="card chart" id="chartCard">
+    <div class="ctitle"><h3 id="chartTitle">Gasto diario</h3><span class="meta">sin extraordinarios</span></div>
+    <div class="bars" id="chart" aria-hidden="true"></div>
+    <div class="axis num" id="axis"></div>
+    <div class="legend"><span><span class="sw"></span>Extraordinarios</span><span><span id="normalLabel">Mes normal</span> <b class="num" id="mesNormal">0,00 €</b></span></div>
+  </section>
+
+  <section class="card cats-card">
+    <div class="ctitle"><h3>Por categoría</h3><button class="link" id="editCatsBtn">Editar</button></div>
+    <div class="stack" id="stack" aria-hidden="true"></div>
+    <div class="cats" id="cats"></div>
+    <button class="more" id="catsMore" hidden></button>
+  </section>
+
+  <section>
+    <h2 class="sect" id="listTitle">Movimientos<button id="seeAll">Ver todos</button></h2>
+    <div class="list card" id="list">
+      <div class="empty">Aquí aparecerán tus movimientos.<br>Pulsa <b>Añadir</b> para apuntar el primero.</div>
+    </div>
+  </section>
+</div>
+
+<div class="dock"><button class="add" id="fab"><span id="fabIco"></span>Añadir</button></div>
+
+<!-- Pantalla Movimientos -->
+<div class="view" id="movsView" aria-hidden="true">
+  <div class="wrap">
+    <div class="top">
+      <button class="ib" id="movsBack" aria-label="Volver"></button>
+      <div class="mpick">
+        <button class="mbtn" id="mvPrev" aria-label="Mes anterior"></button>
+        <span id="mvLabel">—</span>
+        <button class="mbtn" id="mvNext" aria-label="Mes siguiente"></button>
+      </div>
+      <button class="ib" id="movsSearchBtn" aria-label="Buscar"></button>
+    </div>
+    <h1 class="ptitle">Movimientos</h1>
+    <div class="msum num" id="msum"></div>
+    <div class="searchbox" id="movsSearchWrap" hidden><span id="movsSearchIco"></span><input id="movsSearch" placeholder="Buscar en este mes…" autocomplete="off"></div>
+    <div class="filt" id="movsFilters">
+      <button data-f="todos" aria-pressed="true">Todos</button><button data-f="gastos" aria-pressed="false">Gastos</button><button data-f="ingresos" aria-pressed="false">Ingresos</button><button data-f="fijos" aria-pressed="false">Fijos</button>
+    </div>
+    <div class="list card" id="movsList"></div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<!-- Añadir / editar -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <form class="sheet-in" id="form" autocomplete="off">
+    <div class="grab"></div>
+    <h3 class="sr" id="sheetTitle">Nuevo gasto</h3>
+    <div class="shead">
+      <div class="side"><button type="button" class="round" id="close" aria-label="Cerrar"></button></div>
+      <div class="typeseg" role="group" aria-label="Tipo">
+        <button type="button" id="typeGasto" aria-pressed="true">Gasto</button><button type="button" id="typeIngreso" aria-pressed="false">Ingreso</button>
+      </div>
+      <div class="side r"><button type="button" class="del" id="del" hidden>Borrar</button></div>
+    </div>
+    <input id="importe" type="hidden">
+    <div class="amount" id="amountBox"><div class="v num" id="amountView"></div></div>
+    <div class="field">
+      <input id="concepto" placeholder="Concepto (opcional)" enterkeyhint="done" maxlength="200" aria-label="Concepto">
+      <button type="button" class="sugg" id="suggestion" hidden></button>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Categoría"></div>
+    <div class="seg" role="group" aria-label="Fecha">
+      <button type="button" id="dHoy" aria-pressed="true">Hoy</button><button type="button" id="dAyer" aria-pressed="false">Ayer</button><label class="dbtn" id="dOtro" aria-pressed="false"><span id="dOtroIco"></span><span id="dOtroTxt">Otro día</span><input id="fecha" type="date" class="date-over" aria-label="Otro día"></label>
+    </div>
+    <div class="toggles">
+      <button type="button" class="tg" id="tgFijo" role="switch" aria-checked="false"><span id="tgFijoIco"></span><span class="tgt" id="tgFijoTxt">Cada mes</span><span class="sw2"></span></button>
+      <button type="button" class="tg" id="tgExtra" role="switch" aria-checked="false"><span id="tgExtraIco"></span><span class="tgt">Extraordinario</span><span class="sw2"></span></button>
+    </div>
+    <div class="keys num" id="keys">
+      <button type="button" class="key" data-k="1">1</button><button type="button" class="key" data-k="2">2</button><button type="button" class="key" data-k="3">3</button>
+      <button type="button" class="key" data-k="4">4</button><button type="button" class="key" data-k="5">5</button><button type="button" class="key" data-k="6">6</button>
+      <button type="button" class="key" data-k="7">7</button><button type="button" class="key" data-k="8">8</button><button type="button" class="key" data-k="9">9</button>
+      <button type="button" class="key" data-k=",">,</button><button type="button" class="key" data-k="0">0</button><button type="button" class="key" data-k="del" aria-label="Borrar"></button>
+    </div>
+    <button type="submit" class="save" id="save" disabled>Guardar</button>
+  </form>
+</div>
+
+<!-- Categorías -->
+<div class="sheet small" id="catSheet" role="dialog" aria-modal="true" hidden>
+  <div class="sheet-in">
+    <div class="grab"></div>
+    <div class="shead"><h3>Categorías</h3><button type="button" class="round" id="closeCatsBtn" aria-label="Cerrar"></button></div>
+    <div class="card" id="catList"></div>
+    <button class="save" id="addCatBtn">+ Añadir categoría</button>
+  </div>
+</div>
+
+<!-- Ajustes -->
+<div class="sheet small" id="settingsSheet" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
+  <div class="sheet-in">
+    <div class="grab"></div>
+    <div class="shead"><h3 id="settingsTitle">Ajustes</h3><button type="button" class="round" id="closeSettings" aria-label="Cerrar"></button></div>
+    <div class="sec"><h4>Apariencia</h4>
+      <div class="seg"><button type="button" data-tema="auto" aria-pressed="true">Automático</button><button type="button" data-tema="light" aria-pressed="false">Claro</button><button type="button" data-tema="dark" aria-pressed="false">Oscuro</button></div>
+    </div>
+    <div class="sec"><h4>Se repiten cada mes</h4><div class="card" id="fijosList"></div></div>
+    <div class="sec"><h4>Copia de seguridad</h4>
+      <div class="card">
+        <p class="note" id="backupNote">Tus gastos se guardan solo en este móvil. Descarga una copia de vez en cuando.</p>
+        <button class="srow" id="exportBtn"><span id="exportIco"></span><span class="grow">Descargar copia</span></button>
+        <label class="srow file-label" for="importFile"><span id="importIco"></span><span class="grow">Restaurar copia</span><input id="importFile" type="file" accept=".json,application/json"></label>
+        <button class="srow" id="csvBtn"><span id="csvIco"></span><span class="grow">Exportar a Excel (CSV)</span></button>
+      </div>
+    </div>
+    <div class="sec"><h4>Cuenta</h4>
+      <div class="card">
+        <button class="srow" id="loginBtn"><span id="loginIco"></span><span class="grow">Sincronizar con Google</span></button>
+        <button class="srow" id="logoutBtn" style="display:none"><span id="logoutIco"></span><span class="grow">Cambiar de cuenta</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<div id="loadingScreen" hidden><div class="spin"></div></div>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="utils.js"></script>
+<script src="icons.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
