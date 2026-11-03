@@ -434,6 +434,30 @@ async function runAppTests(){
     await A.click(b);eq("pide confirmación",A.fijos().length,1);await A.click(A.d.querySelector('#fijosList [data-quitar="f1"]'),150);eq("quitado",A.fijos().length,0);});
 
   section("app — Movimientos, sugerencia y ajustes");
+  {const D=d=>MONTH+"-"+String(d).padStart(2,"0");
+   const H_=A=>A.$("chart").getBoundingClientRect().height,hOf=(c,k)=>{const e=c.querySelector(k);return e?e.getBoundingClientRect().height:0};
+   await T("gráfico: un extraordinario normal se dibuja con su importe real",{firebase:false,store:store([
+       G("a","Cena",60,"Comida fuera",D(1)),G("b","Pan",30,"Súper",D(2)),{...G("x","Regalo",30,"Otros",D(2)),extra:true}])},async A=>{
+     const [c1,c2]=A.d.querySelectorAll("#chart .bar");ok("marcado",c2.classList.contains("extra"));
+     const f1=hOf(c1,".fill"),f2=hOf(c2,".fill"),k2=hOf(c2,".cap");
+     ok("30 € normal es la mitad que 60 € ("+f2.toFixed(1)+"/"+f1.toFixed(1)+")",Math.abs(f2/f1-0.5)<0.06);
+     ok("30 € extra mide lo mismo que 30 € normal ("+k2.toFixed(1)+"/"+f2.toFixed(1)+")",Math.abs(k2/f2-1)<0.1);
+     ok("sin recortar",!c2.querySelector(".cap.clip"));
+     ok("la marca va encima",c2.querySelector(".cap").getBoundingClientRect().bottom<=c2.querySelector(".fill").getBoundingClientRect().top+0.5);});
+   await T("gráfico: un extraordinario algo mayor amplía la escala",{firebase:false,store:store([
+       G("a","Cena",60,"Comida fuera",D(1)),{...G("x","Zapatillas",120,"Ropa",D(2)),extra:true}])},async A=>{
+     const [c1,c2]=A.d.querySelectorAll("#chart .bar"),k2=hOf(c2,".cap"),f1=hOf(c1,".fill");
+     ok("sin recortar",!c2.querySelector(".cap.clip"));ok("solo marca, sin barra normal",!c2.querySelector(".fill"));
+     ok("120 € mide el doble que 60 € ("+k2.toFixed(1)+"/"+f1.toFixed(1)+")",Math.abs(k2/f1-2)<0.12);
+     ok("no se sale",c2.getBoundingClientRect().height<=H_(A)+0.5);});
+   await T("gráfico: un extraordinario muy grande se recorta y no aplasta el resto",{firebase:false,store:store([
+       G("a","Cena",60,"Comida fuera",D(1)),G("b","Pan",20,"Súper",D(2)),{...G("x","Switch",381,"Tecnología",D(2)),extra:true}])},async A=>{
+     const [c1,c2]=A.d.querySelectorAll("#chart .bar"),H=H_(A);
+     ok("marcado como recortado",!!c2.querySelector(".cap.clip"));
+     ok("llega arriba sin salirse ("+c2.getBoundingClientRect().height.toFixed(1)+"/"+H.toFixed(1)+")",c2.getBoundingClientRect().height>H-2&&c2.getBoundingClientRect().height<=H+0.5);
+     ok("el día de 60 € sigue alto ("+hOf(c1,".fill").toFixed(1)+")",hOf(c1,".fill")>H*0.6);
+     ok("20 € normal a escala",Math.abs(hOf(c2,".fill")/hOf(c1,".fill")-1/3)<0.06);});
+  }
   await T("«Añadir categoría» no se aplasta",{firebase:false},async A=>{
     await A.click("editCatsBtn",350);eq("altura normal",Math.round(A.$("addCatBtn").getBoundingClientRect().height),54);});
   await T("Categorías no tiene X",{firebase:false},async A=>{await A.click("editCatsBtn",350);ok("sin botón cerrar",!A.$("closeCatsBtn")&&!A.d.querySelector("#catSheet .round"));});
@@ -734,11 +758,11 @@ eq("vacío", byCategory([]), []);
 section("dailySeries / monthlySeries");
 {const d=dailySeries([{fecha:"2026-10-02",importe:5},{fecha:"2026-10-02",importe:3},{fecha:"2026-10-05",importe:381,extra:true},
    {fecha:"2026-10-05",importe:4},{fecha:"2026-10-03",importe:100,tipo:"ingreso"},{fecha:"2026-09-02",importe:9}],"2026-10");
- eq("un valor por día",d.length,31);eq("día 2",d[1],{day:2,total:8,extra:false});eq("día sin gastos",d[2],{day:3,total:0,extra:false});
- eq("día con extraordinario",d[4],{day:5,total:4,extra:true});}
+ eq("un valor por día",d.length,31);eq("día 2",d[1],{day:2,total:8,extra:false,extraImp:0});eq("día sin gastos",d[2],{day:3,total:0,extra:false,extraImp:0});
+ eq("día con extraordinario",d[4],{day:5,total:4,extra:true,extraImp:381});}
 eq("febrero", dailySeries([],"2026-02").length, 28);
 {const m=monthlySeries([{fecha:"2026-01-02",importe:5},{fecha:"2026-03-02",importe:7,extra:true},{fecha:"2026-03-09",importe:1,tipo:"ingreso"},{fecha:"2025-03-02",importe:9}],2026);
- eq("12 meses",m.length,12);eq("enero",m[0],{day:1,total:5,extra:false});eq("marzo extra",m[2],{day:3,total:0,extra:true});}
+ eq("12 meses",m.length,12);eq("enero",m[0],{day:1,total:5,extra:false,extraImp:0});eq("marzo extra",m[2],{day:3,total:0,extra:true,extraImp:7});}
 
 section("groupByDay / dayLabel");
 {const r=groupByDay([{id:"a",fecha:"2026-10-30",importe:55,ts:1},{id:"b",fecha:"2026-10-30",importe:35,tipo:"ingreso",ts:2},{id:"c",fecha:"2026-10-31",importe:29.2}]);

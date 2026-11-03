@@ -111,10 +111,14 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 /* Gráfico */
 .chart{padding:14px 16px}
 .bars{display:flex;align-items:flex-end;gap:3px;height:78px;margin-top:10px}
-.bar{flex:1;border-radius:3px 3px 1.5px 1.5px;background:var(--accent);opacity:.85;min-height:3px}
-.bar.zero{background:var(--line);opacity:1}
-.bar.extra{background:repeating-linear-gradient(135deg,var(--accent) 0 3px,transparent 3px 6px);opacity:.6}
-.bar.today{opacity:1;background:var(--ink)}
+/* Cada día es una columna: barra normal a escala (.fill) y, si hubo extraordinario, una marca rayada encima (.cap) */
+.bar{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
+.bar .fill{display:block;border-radius:3px 3px 1.5px 1.5px;background:var(--accent);opacity:.85}
+.bar .cap{display:block;flex:none;border-radius:3px;background:repeating-linear-gradient(135deg,var(--accent) 0 2px,transparent 2px 4px);opacity:.75}
+.bar .cap.clip{border-radius:0 0 3px 3px;-webkit-mask:linear-gradient(to bottom,transparent 0,#000 12px);mask:linear-gradient(to bottom,transparent 0,#000 12px)}
+.bar .fill{flex:none}
+.bar.zero{height:3px;border-radius:1.5px;background:var(--line)}
+.bar.today .fill{opacity:1;background:var(--ink)}
 .axis{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px}
 .legend{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
 .legend b{color:var(--ink);font-weight:600}
