@@ -98,14 +98,14 @@ function monthSummary(list,ym,today){
 function byCategory(list){const t=sumImp(list),m=new Map();
   list.forEach(g=>{const c=m.get(g.categoria)||{categoria:g.categoria,total:0,count:0};c.total=r2(c.total+g.importe);c.count++;m.set(g.categoria,c)});
   return [...m.values()].map(c=>({...c,pct:t?c.total/t*100:0})).sort((a,b)=>b.total-a.total)}
-// Gasto por día del mes (sin extraordinarios; los días con alguno van marcados)
-function dailySeries(list,ym){const d=Array.from({length:daysIn(ym)},(_,i)=>({day:i+1,total:0,extra:false}));
+// Gasto por día del mes: total = normal, extraImp = extraordinarios (y extra marca si hubo alguno)
+function dailySeries(list,ym){const d=Array.from({length:daysIn(ym)},(_,i)=>({day:i+1,total:0,extra:false,extraImp:0}));
   list.forEach(g=>{if(isIngreso(g)||(g.fecha||"").slice(0,7)!==ym)return;const x=d[+g.fecha.slice(8,10)-1];if(!x)return;
-    if(g.extra)x.extra=true;else x.total=r2(x.total+g.importe)});return d}
+    if(g.extra){x.extra=true;x.extraImp=r2(x.extraImp+g.importe)}else x.total=r2(x.total+g.importe)});return d}
 // Lo mismo por meses de un año
-function monthlySeries(list,year){const d=Array.from({length:12},(_,i)=>({day:i+1,total:0,extra:false}));
+function monthlySeries(list,year){const d=Array.from({length:12},(_,i)=>({day:i+1,total:0,extra:false,extraImp:0}));
   list.forEach(g=>{if(isIngreso(g)||!(g.fecha||"").startsWith(year+"-"))return;const x=d[+g.fecha.slice(5,7)-1];
-    if(g.extra)x.extra=true;else x.total=r2(x.total+g.importe)});return d}
+    if(g.extra){x.extra=true;x.extraImp=r2(x.extraImp+g.importe)}else x.total=r2(x.total+g.importe)});return d}
 // Agrupa por día (lo más reciente arriba) con el neto de cada día
 function groupByDay(list){const m=new Map();list.forEach(g=>{const f=(g.fecha||"").slice(0,10);if(!m.has(f))m.set(f,[]);m.get(f).push(g)});
   return [...m.entries()].sort((a,b)=>b[0].localeCompare(a[0])).map(([fecha,items])=>({fecha,

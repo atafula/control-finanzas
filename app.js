@@ -140,12 +140,19 @@ function renderFlow(s,cuando){
 }
 /* Gráfico de barras (días del mes o meses del año) */
 function renderChart(series,todayIdx,labels){
-  const max=Math.max(1,...series.map(d=>d.total));
+  // Cada día: su gasto normal y, encima y rayado, el extraordinario con su importe real.
+  // Si un extraordinario es enorme (más de 3 veces el día normal más alto) se recorta arriba para no aplastar el resto.
   const c=$("chart");c.innerHTML="";
+  const H=c.clientHeight||78,GAP=2,LIM=3,maxN=Math.max(0,...series.map(d=>d.total));
+  const big=d=>maxN>0&&d.total+d.extraImp>maxN*LIM;
+  const max=Math.max(1,maxN,...series.filter(d=>d.extra&&!big(d)).map(d=>d.total+d.extraImp));
+  const px=v=>v/max*H;
   series.forEach((d,i)=>{const b=el("i","bar");
-    if(d.extra){b.classList.add("extra");b.style.height="100%"}
-    else if(d.total>0){b.style.height=Math.max(6,d.total/max*100)+"%";if(i===todayIdx)b.classList.add("today")}
-    else{b.classList.add("zero");b.style.height="4%"}
+    const fh=d.total>0?Math.max(4,px(d.total)):0;
+    if(d.extra){b.classList.add("extra");const k=el("i","cap"),clip=big(d);if(clip)k.classList.add("clip");
+      k.style.height=(clip?H-fh-(fh?GAP:0):Math.max(4,px(d.extraImp)-(fh?GAP:0)))+"px";b.appendChild(k)}
+    if(fh){const f=el("i","fill");f.style.height=fh+"px";b.appendChild(f);if(i===todayIdx)b.classList.add("today")}
+    else if(!d.extra)b.classList.add("zero");
     c.appendChild(b)});
   const a=$("axis");a.innerHTML="";labels.forEach(l=>a.appendChild(el("span",null,l)));
 }
