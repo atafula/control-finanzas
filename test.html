@@ -44,11 +44,17 @@ function docRef(p){const k=p.join("/");return{id:p[p.length-1],
  update(d){if(!S[k])return Promise.reject({code:"not-found"});Object.assign(S[k],clone(d));notify();return Promise.resolve()},
  delete(){if(OFF){L[k]=null;notify();return new Promise(()=>{})}delete S[k];notify();return Promise.resolve()},collection:c=>colRef([...p,c]),
  onSnapshot(a,b){const cb=typeof a==="function"?a:b;const f=()=>cb({exists:!!view(k),data:()=>view(k)&&clone(view(k))});subs.push(f);setTimeout(f,0);return()=>subs.splice(subs.indexOf(f),1)}}}
-function colRef(p){return{doc:id=>docRef([...p,id||rid()]),add(d){const r=docRef([...p,rid()]);return r.set(d).then(()=>r)},
- onSnapshot(a,b){const cb=typeof a==="function"?a:b;const c=window.__cfg.cache;
-  if(c)setTimeout(()=>cb({docs:c.map(x=>({id:x.id,data:()=>clone(x)})),metadata:{fromCache:true}}),0);
-  const f=()=>cb({docs:kids(p).map(k=>{const v=clone(view(k));return{id:k.split("/").pop(),data:()=>clone(v)}}),metadata:{fromCache:OFF}});
-  subs.push(f);setTimeout(f,20);return()=>subs.splice(subs.indexOf(f),1)}}}
+function colRef(p,fs=[]){
+ const docsOf=()=>kids(p).filter(k=>fs.every(([f,op,v])=>{const x=(view(k)||{})[f];return op===">="?x>=v:op==="<"?x<v:x===v}));
+ const shape=ks=>ks.map(k=>{const v=clone(view(k));return{id:k.split("/").pop(),data:()=>clone(v)}});
+ return{doc:id=>docRef([...p,id||rid()]),add(d){const r=docRef([...p,rid()]);return r.set(d).then(()=>r)},
+  where:(f,op,v)=>colRef(p,[...fs,[f,op,v]]),
+  get(){const ks=docsOf();window.__reads=(window.__reads||0)+ks.length;return Promise.resolve({docs:shape(ks),metadata:{fromCache:OFF}})},
+  onSnapshot(a,b){const cb=typeof a==="function"?a:b;const c=window.__cfg.cache;
+   if(c)setTimeout(()=>cb({docs:c.map(x=>({id:x.id,data:()=>clone(x)})),metadata:{fromCache:true}}),0);
+   const f=()=>cb({docs:shape(docsOf()),metadata:{fromCache:OFF}});
+   setTimeout(()=>{window.__reads=(window.__reads||0)+docsOf().length},20);
+   subs.push(f);setTimeout(f,20);return()=>subs.splice(subs.indexOf(f),1)}}}
 const fs={enablePersistence:()=>Promise.resolve(),collection:c=>colRef([c]),
  batch(){const o=[];return{set:(r,d,x)=>o.push(()=>r.set(d,x)),update:(r,d)=>o.push(()=>r.update(d)),delete:r=>o.push(()=>r.delete()),commit:()=>{o.forEach(f=>f());return OFF?new Promise(()=>{}):Promise.resolve()}}}};
 const uid=window.__cfg.user;const user=uid?{uid,refreshToken:"r",getIdToken:()=>Promise.resolve("t")}:null;
@@ -91,7 +97,7 @@ async function openApp(cfg={}){
     wait:(ms=120)=>sleep(ms),
     store:()=>w.__store,
     snapshotStore:()=>Object.assign({},w.__store), // para "cerrar y volver a abrir" la app
-    db:()=>w.__db,
+    db:()=>w.__db,reads:()=>w.__reads||0,
     srv:()=>w.__srv,
     json:k=>{try{return JSON.parse(w.__store[k])}catch(e){return null}},
     local:()=>A.json("mis-gastos-v3")||[],
@@ -432,6 +438,26 @@ async function runAppTests(){
   await T("quitar un fijo desde Ajustes",{firebase:false,store:{"mis-gastos-fijos":JSON.stringify([{...FIJO,ultimo:MONTH}])}},async A=>{
     await A.click("settingsBtn");ok("aparece",A.text("fijosList").includes("Prime"));const b=A.d.querySelector('#fijosList [data-quitar="f1"]');
     await A.click(b);eq("pide confirmación",A.fijos().length,1);await A.click(A.d.querySelector('#fijosList [data-quitar="f1"]'),150);eq("quitado",A.fijos().length,0);});
+
+  section("app — sincronización por meses");
+  {const PM=(()=>{const d=new Date(YEAR,+MONTH.slice(5,7)-2,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")})();
+   const OTRO=MONTH.slice(5,7)==="01"?YEAR+"-02-05":YEAR+"-01-05";
+   const ANTIGUOS=Array.from({length:40},(_,i)=>G("h"+i,"Antiguo "+i,1,"Otros","2020-03-"+String(1+i%27).padStart(2,"0"),i));
+   await T("solo lee del servidor el mes que se ve",{user:"u",store:LOGGED("u"),db:docs("u",[G("m1","Pan",2,"Súper"),G("m2","Bus",1,"Transporte"),G("m3","Café",1,"Cafés y snacks"),...ANTIGUOS])},async A=>{
+     await A.wait(300);eq("lecturas",A.reads(),3);});
+   await T("al cambiar de mes lee solo ese mes",{user:"u",store:LOGGED("u"),db:docs("u",[G("m1","Pan",2,"Súper"),G("p1","Pan",2,"Súper",PM+"-05"),G("p2","Bus",1,"Transporte",PM+"-06"),...ANTIGUOS])},async A=>{
+     await A.wait(300);eq("al abrir",A.reads(),1);
+     await A.click("prev");await A.wait(300);eq("tras cambiar de mes",A.reads(),3);});
+   await T("no borra de este móvil los gastos de otros meses",{user:"u",store:{...LOGGED("u"),...store([G("v","Viejo",9,"Otros","2025-06-01")])},db:docs("u",[G("m1","Pan",2,"Súper")])},async A=>{
+     await A.wait(300);ok("sigue el de otro mes",A.local().some(g=>g.id==="v"));ok("y el de este mes",A.local().some(g=>g.id==="m1"));});
+   await T("el resumen del año pide ese año y lo suma bien",{user:"u",store:LOGGED("u"),db:docs("u",[G("m1","Pan",1,"Súper"),G("y1","Antiguo",10,"Otros",OTRO)])},async A=>{
+     await A.wait(300);await A.click("statsToggle");await A.wait(400);
+     ok("total del año ("+A.text("total")+")",A.text("total").startsWith("11,00"));});
+   await T("buscar encuentra gastos de cualquier mes",{user:"u",store:LOGGED("u"),db:docs("u",[G("m1","Pan",1,"Súper"),G("z1","Pizza archivo",5,"Otros","2025-03-02")])},async A=>{
+     await A.wait(300);await A.click("searchToggle");await A.wait(100);
+     A.$("searchInput").value="Pizza";A.$("searchInput").dispatchEvent(new Event("input"));await A.wait(400);
+     ok("aparece el de otro mes",A.$("list").textContent.includes("Pizza archivo"));});
+  }
 
   section("app — Movimientos, sugerencia y ajustes");
   {const D=d=>MONTH+"-"+String(d).padStart(2,"0");

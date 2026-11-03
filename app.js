@@ -99,6 +99,43 @@ function cicEl(cat,c,icon){const d=el("div","cic");d.style.cssText=tint(c);d.inn
 function setTotal(v){const [a,b]=eur(v).split(",");const t=$("total");t.innerHTML="";t.append(el("span",null,a),el("span","cent",","+b),el("span","eur","€"))}
 function setPills(list){const s=$("sub");s.innerHTML="";list.forEach(([txt,cls])=>s.appendChild(el("span","pill"+(cls?" "+cls:""),txt)))}
 const curMonth=()=>todayISO().slice(0,7);
+// Solo se descargan de Firestore los gastos del mes que se ve. El resto se pide cuando hace falta (resumen, búsqueda, exportar)
+function monthRange(ym){const [y,m]=ym.split("-").map(Number);const n=new Date(y,m,1);
+  return [ym+"-01",n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-01"]}
+const rk=(a,b)=>a+"|"+b;
+let loadedRanges=new Set(),inflight=new Map(),listenedFrom=null,relisten=null;
+const colQuery=(a,b)=>col.where("fecha",">=",a).where("fecha","<",b);
+const ALL_RANGE=["0000-01-01","9999-12-31"];
+function ensureRange(a,b){
+  const k=rk(a,b);if(!col||!auth||!auth.currentUser||loadedRanges.has(k))return Promise.resolve();
+  if(inflight.has(k))return inflight.get(k);
+  const p=colQuery(a,b).get().then(snap=>{if(!snap.metadata.fromCache){applyServer(snap.docs,a,b,true);loadedRanges.add(k)}})
+    .catch(()=>{}).then(()=>{inflight.delete(k)});
+  inflight.set(k,p);return p;
+}
+// Une lo que llega del servidor para un rango de fechas con lo que hay en el móvil fuera de ese rango
+function applyServer(docs,from,to,trusted){
+  const deleted=loadDeleted();
+  const local=load()||[];
+  const inR=g=>{const f=(g.fecha||"").slice(0,10);return f>=from&&f<to};
+  if(trusted){ // solo con datos reales del servidor
+    const serverIds=new Set(docs.map(d=>d.id));
+    const toDelete=deleted.filter(id=>serverIds.has(id));
+    const pend=new Set(loadPending()||[]);
+    const up=local.filter(g=>g&&g.id&&pend.has(g.id)&&!deleted.includes(g.id)&&!syncing.has(g.id)&&validGasto((({id,...d})=>d)(g)));
+    const del=toDelete.filter(id=>!syncing.has(id));
+    const ops=[...del.map(id=>b=>b.delete(col.doc(id))),...up.map(g=>b=>{const{id,...d}=g;b.set(col.doc(id),d)})];
+    if(ops.length){const ids=[...del,...up.map(g=>g.id)];ids.forEach(id=>syncing.add(id));
+      commitOps(ops).then(()=>dropPending(up.map(g=>g.id))).catch(()=>{}).then(()=>ids.forEach(id=>syncing.delete(id)))}
+    try{localStorage.setItem(DEL_KEY,JSON.stringify(deleted.filter(id=>serverIds.has(id))))}catch(e){}
+  }
+  const fromServer=docs.map(d=>fixGasto({id:d.id,...d.data()})).filter(g=>!deleted.includes(g.id));
+  gastos=[...local.filter(g=>g&&!inR(g)),...fromServer];
+  const pend=new Set(loadPending()||[]);
+  if(pend.size){const ids=new Set(gastos.map(g=>g.id));local.forEach(g=>{if(g&&pend.has(g.id)&&!ids.has(g.id)&&!deleted.includes(g.id))gastos.push(g)})}
+  persist();render();
+  $("status").textContent="";
+}
 
 /* Fila de un movimiento: icono, concepto, categoría (+ Fijo/Extra) e importe */
 function rowEl(g){
@@ -175,13 +212,14 @@ function renderCats(list,clickable){
 }
 
 function render(){
+  if(relisten)relisten();
   $("prev").disabled=false;
   $("statsToggle").setAttribute("aria-pressed",String(statsMode));
   $("flowCard").hidden=false;$("chartCard").hidden=false;$("seeAll").hidden=false;
   if(statsMode){$("searchToggle").hidden=true;$("editCatsBtn").hidden=true;renderStats();if(movsOpen)renderMovs();return}
   $("editCatsBtn").hidden=false;
   $("searchToggle").hidden=false;
-  if(searchQuery){renderSearch();return}
+  if(searchQuery){ensureRange(...ALL_RANGE);renderSearch();return}
   const today=todayISO(),isNow=month===curMonth();
   $("heroLabel").textContent=isNow?"Gastado este mes":"Gastado en "+monthName(month).split(" ")[0];
   $("monthLabel").textContent=monthTitle(month);
@@ -474,12 +512,14 @@ document.querySelector('.key[data-k="del"]').innerHTML=ico("delete");
 buildChips();
 
 /* copia de seguridad */
-$("exportBtn").onclick=()=>{
+$("exportBtn").onclick=async()=>{
+  await ensureRange(...ALL_RANGE);
   const blob=new Blob([JSON.stringify(gastos,null,1)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`gastos-${todayISO()}.json`;
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 };
-$("csvBtn").onclick=()=>{
+$("csvBtn").onclick=async()=>{
+  await ensureRange(...ALL_RANGE);
   const rows=[["fecha","tipo","concepto","categoria","importe","extraordinario"],...gastos.map(g=>[g.fecha,isIngreso(g)?"ingreso":"gasto",g.concepto,g.categoria,String(g.importe).replace(".",","),g.extra?"sí":""])];
   const csv="﻿"+rows.map(r=>r.map(x=>`"${String(x??"").replace(/"/g,'""')}"`).join(";")).join("\n");
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=`gastos-${todayISO()}.csv`;
@@ -519,16 +559,22 @@ function runFijos(){
   const del=new Set(loadDeleted());
   const nuevos=r.nuevos.filter(g=>!del.has(g.id)&&!gastos.some(x=>x.id===g.id));
   FIJOS=r.fijos;saveFijos();
-  nuevos.forEach(saveOne);
+  nuevos.forEach(g=>{
+    if(!col||!auth||!auth.currentUser){saveOne(g);return}
+    // El id es fijo por mes: si ya existe en la nube (aunque ese mes no esté cargado) no se pisa
+    col.doc(g.id).get().then(s=>{if(!s.exists&&!gastos.some(x=>x.id===g.id))saveOne(g)}).catch(()=>{});
+  });
 }
 
 const MESES=["E","F","M","A","M","J","J","A","S","O","N","D"];
 function renderStats(){
   const yr=statsYear,curYr=new Date().getFullYear(),today=todayISO();
+  ensureRange(yr+"-01-01",(yr+1)+"-01-01");
   const years=gastos.map(g=>+(g.fecha||"").slice(0,4)).filter(Boolean);
   $("monthLabel").textContent="Resumen "+yr;
   $("heroLabel").textContent=yr===curYr?"Gastado este año":"Gastado en "+yr;
-  $("prev").disabled=!years.some(y=>y<yr);$("next").disabled=yr>=curYr;
+  // Con sesión no sabemos qué años hay sin pedirlos: se deja ir hacia atrás
+  $("prev").disabled=!years.some(y=>y<yr)&&!(col&&auth&&auth.currentUser);$("next").disabled=yr>=curYr;
   const all=gastos.filter(g=>(g.fecha||"").startsWith(yr+"-"));
   const gs=all.filter(g=>!isIngreso(g)),is=all.filter(isIngreso);
   const tot=sumImp(gs),ing=sumImp(is),norm_=sumImp(gs.filter(g=>!g.extra));
@@ -625,32 +671,15 @@ if(auth){
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")revive()});
   window.addEventListener("online",revive);
   function stopListen(){if(unsub){unsub();unsub=null}listening=false;clearTimeout(retryT)}
+  relisten=()=>{if(!listening||!auth.currentUser)return;if(monthRange(month)[0]!==listenedFrom)listen(auth.currentUser)};
   function listen(user){
       stopListen();
       listening=true;
-      unsub=col.onSnapshot({includeMetadataChanges:true},snap=>{
+      const [from,to]=monthRange(month);listenedFrom=from;
+      unsub=colQuery(from,to).onSnapshot({includeMetadataChanges:true},snap=>{
         retryDelay=3000;
-        const deleted=loadDeleted();
-        const local=load()||[];
-        if(!snap.metadata.fromCache){ // solo con datos reales del servidor
-          const serverIds=new Set(snap.docs.map(d=>d.id));
-          const toDelete=deleted.filter(id=>serverIds.has(id));
-          const pend=new Set(loadPending()||[]);
-          // (las que ya se están subiendo no se repiten)
-          const up=local.filter(g=>g&&g.id&&pend.has(g.id)&&!deleted.includes(g.id)&&!syncing.has(g.id)&&validGasto((({id,...d})=>d)(g)));
-          const del=toDelete.filter(id=>!syncing.has(id));
-          const ops=[...del.map(id=>b=>b.delete(col.doc(id))),...up.map(g=>b=>{const{id,...d}=g;b.set(col.doc(id),d)})];
-          if(ops.length){const ids=[...del,...up.map(g=>g.id)];ids.forEach(id=>syncing.add(id));
-            commitOps(ops).then(()=>dropPending(up.map(g=>g.id))).catch(()=>{}).then(()=>ids.forEach(id=>syncing.delete(id)))}
-          // Los borrados que ya no están en el servidor ya no hace falta recordarlos
-          try{localStorage.setItem(DEL_KEY,JSON.stringify(deleted.filter(id=>serverIds.has(id))))}catch(e){}
-        }
-        gastos=snap.docs.map(d=>fixGasto({id:d.id,...d.data()})).filter(g=>!deleted.includes(g.id));
-        // Que los pendientes de subir no desaparezcan de la pantalla mientras se suben
-        const pend=new Set(loadPending()||[]);
-        if(pend.size){const ids=new Set(gastos.map(g=>g.id));local.forEach(g=>{if(g&&pend.has(g.id)&&!ids.has(g.id)&&!deleted.includes(g.id))gastos.push(g)})}
-        persist();render();
-        $("status").textContent="";
+        applyServer(snap.docs,from,to,!snap.metadata.fromCache);
+        if(!snap.metadata.fromCache)loadedRanges.add(rk(from,to));
       },err=>{
         // Antes la escucha moría aquí para siempre; ahora se reintenta
         listening=false;unsub=null;
