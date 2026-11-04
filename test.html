@@ -254,6 +254,9 @@ async function runAppTests(){
     await A.click(row.querySelector(".cat-del"),150);ok("borrada",!A.cats().some(c=>c[0]==="Regalos"));});
   await T("un color de categoría manipulado no ejecuta código",{firebase:false,store:{"mis-gastos-cats":JSON.stringify([["Otros",'--c1)"><img src=x onerror="window.__hack=1">']])}},async A=>{
     await A.wait(200);await A.click("fab");await A.click("scrim",300);await A.click("editCatsBtn");await A.wait(150);ok("no se ejecuta",!A.w.__hack);eq("color neutro",A.cats()[0]?A.cats()[0][1]:"--c8","--c8");});
+  await T("texto malicioso desde la nube se muestra como texto",{user:"u",store:LOGGED("u"),db:docs("u",[{...G("x1",'<img src=x onerror="window.__hack=1">Pan',2,'<img src=x onerror="window.__hack=2">Súper'),importe:2}])},async A=>{
+    await A.wait(300);eq("sin imágenes inyectadas",A.d.querySelectorAll("img").length,0);
+    ok("se ve el texto literal",A.$("list").textContent.includes('<img src=x onerror='));});
   await T("color manipulado desde la nube",{user:"u",store:LOGGED("u"),db:{"users/u":{cats:[{n:"X",c:'--c1)"><img src=x onerror="window.__hack=1">'}],catsText:"X"}}},async A=>{
     await A.wait(250);await A.add("1","X");await A.click("editCatsBtn");await A.wait(150);ok("no se ejecuta",!A.w.__hack);});
   await T("categorías estropeadas en el móvil",{firebase:false,store:{"mis-gastos-cats":'{"roto":1}'}},async A=>{
