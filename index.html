@@ -21,7 +21,7 @@
 <link rel="icon" type="image/svg+xml" href="icon-192.svg">
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="style.css">
-<script>try{const t=localStorage.getItem("mis-gastos-tema");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{const r=document.documentElement,t=localStorage.getItem("mis-gastos-tema"),a=localStorage.getItem("mis-gastos-acento");if(t==="light"||t==="dark")r.dataset.theme=t;if(a&&/^[a-z]{3,12}$/.test(a)&&a!=="azul")r.dataset.accent=a}catch(e){}</script>
 </head>
 <body>
 <div class="wrap" id="home">
@@ -161,7 +161,22 @@
     <div class="grab"></div>
     <div class="shead"><h3 id="settingsTitle">Ajustes</h3></div>
     <div class="sec"><h4>Apariencia</h4>
-      <div class="seg"><button type="button" data-tema="auto" aria-pressed="true">Automático</button><button type="button" data-tema="light" aria-pressed="false">Claro</button><button type="button" data-tema="dark" aria-pressed="false">Oscuro</button></div>
+      <div class="card appearance">
+        <div class="tgrid" role="group" aria-label="Tema">
+          <button type="button" class="tcard" data-tema="auto" aria-pressed="true"><span class="tprev a"><span class="tprev l"><i></i></span><span class="tprev d"><i></i></span></span><span class="tl">Automático</span></button>
+          <button type="button" class="tcard" data-tema="light" aria-pressed="false"><span class="tprev l"><i></i></span><span class="tl">Claro</span></button>
+          <button type="button" class="tcard" data-tema="dark" aria-pressed="false"><span class="tprev d"><i></i></span><span class="tl">Oscuro</span></button>
+        </div>
+        <p class="alabel">Color de acento</p>
+        <div class="swatches" role="group" aria-label="Color de acento">
+          <button type="button" class="swatch" data-acento="azul" aria-label="Azul" aria-pressed="true" style="--sl:#2F5BEA"></button>
+          <button type="button" class="swatch" data-acento="turquesa" aria-label="Turquesa" aria-pressed="false" style="--sl:#0C8DA0"></button>
+          <button type="button" class="swatch" data-acento="violeta" aria-label="Violeta" aria-pressed="false" style="--sl:#7048E8"></button>
+          <button type="button" class="swatch" data-acento="naranja" aria-label="Naranja" aria-pressed="false" style="--sl:#D4580F"></button>
+          <button type="button" class="swatch" data-acento="rosa" aria-label="Rosa" aria-pressed="false" style="--sl:#D6336C"></button>
+          <button type="button" class="swatch" data-acento="grafito" aria-label="Grafito" aria-pressed="false" style="--sl:#2B313B"></button>
+        </div>
+      </div>
     </div>
     <div class="sec"><h4>Se repiten cada mes</h4><div class="card" id="fijosList"></div></div>
     <div class="sec"><h4>Copia de seguridad</h4>

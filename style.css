@@ -3,7 +3,9 @@
    Añadir/editar, Categorías y Ajustes salen como hojas desde abajo; «Movimientos» es una pantalla encima. */
 :root{
   --bg:#F4F5F7; --surface:#FFFFFF; --surface-2:#F0F2F5; --ink:#0E1116; --ink-2:#3A404A; --muted:#737A86; --line:#E6E8EC;
-  --accent:#2F5BEA; --accent-soft:#E8EEFD; --accent-ink:#FFFFFF;
+  --acc-l:#2F5BEA; --acc-ls:#E8EEFD; --acc-d:#6D8CFF; --acc-ds:#1B2340;
+  --accent:var(--acc-l); --accent-soft:var(--acc-ls); --accent-ink:#FFFFFF;
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1);
   --inc:#18915F; --inc-soft:#E3F4EC; --bad:#D4473A; --danger:#D4473A;
   --dot:rgba(14,17,22,.06); --dots:1; --scrim:rgba(10,12,16,.45);
   --shadow:0 1px 2px rgba(14,17,22,.04),0 8px 24px rgba(14,17,22,.05);
@@ -15,22 +17,29 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0B0D11; --surface:#15181E; --surface-2:#1C2028; --ink:#F2F4F7; --ink-2:#C9CED6; --muted:#8C93A0; --line:#242831;
-  --accent:#6D8CFF; --accent-soft:#1B2340; --accent-ink:#0B0D11;
+  --accent:var(--acc-d); --accent-soft:var(--acc-ds); --accent-ink:#0B0D11;
   --inc:#4CC995; --inc-soft:#12271F; --bad:#FF7F70; --danger:#FF7F70;
   --dot:rgba(242,244,247,.055); --scrim:rgba(0,0,0,.6); --shadow:0 1px 2px rgba(0,0,0,.3);
-  --dock-btn:#6D8CFF; --dock-ink:#0B0D11;
+  --dock-btn:var(--acc-d); --dock-ink:#0B0D11;
   --c0:#7D9BFF;--c1:#F0A060;--c2:#F07FA8;--c3:#5FCB98;--c4:#B596F2;--c5:#E7C756;--c6:#5CC7E2;--c7:#F48A7E;--c8:#9CC06E;--c9:#CFA284;--c10:#A6B0B9;
   --i0:#4CC995;--i1:#4FD1C5;--i2:#B5D46A;--i3:#F08CB8;--i4:#8AB0FF;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0B0D11; --surface:#15181E; --surface-2:#1C2028; --ink:#F2F4F7; --ink-2:#C9CED6; --muted:#8C93A0; --line:#242831;
-  --accent:#6D8CFF; --accent-soft:#1B2340; --accent-ink:#0B0D11;
+  --accent:var(--acc-d); --accent-soft:var(--acc-ds); --accent-ink:#0B0D11;
   --inc:#4CC995; --inc-soft:#12271F; --bad:#FF7F70; --danger:#FF7F70;
   --dot:rgba(242,244,247,.055); --scrim:rgba(0,0,0,.6); --shadow:0 1px 2px rgba(0,0,0,.3);
-  --dock-btn:#6D8CFF; --dock-ink:#0B0D11;
+  --dock-btn:var(--acc-d); --dock-ink:#0B0D11;
   --c0:#7D9BFF;--c1:#F0A060;--c2:#F07FA8;--c3:#5FCB98;--c4:#B596F2;--c5:#E7C756;--c6:#5CC7E2;--c7:#F48A7E;--c8:#9CC06E;--c9:#CFA284;--c10:#A6B0B9;
   --i0:#4CC995;--i1:#4FD1C5;--i2:#B5D46A;--i3:#F08CB8;--i4:#8AB0FF;
   color-scheme:dark}
+
+/* Colores de acento (la app también los usa en gráficos, botones y selección) */
+:root[data-accent="turquesa"]{--acc-l:#0C8DA0;--acc-ls:#DDF3F6;--acc-d:#4FD0E0;--acc-ds:#10292E}
+:root[data-accent="violeta"]{--acc-l:#7048E8;--acc-ls:#EEE9FD;--acc-d:#A78BFA;--acc-ds:#231A40}
+:root[data-accent="naranja"]{--acc-l:#D4580F;--acc-ls:#FDEBDD;--acc-d:#FF9A57;--acc-ds:#3A2112}
+:root[data-accent="rosa"]{--acc-l:#D6336C;--acc-ls:#FCE6EE;--acc-d:#F783AC;--acc-ds:#3A1524}
+:root[data-accent="grafito"]{--acc-l:#2B313B;--acc-ls:#E8EAEE;--acc-d:#C7CCD6;--acc-ds:#262A32}
 
 *{box-sizing:border-box;touch-action:manipulation}
 html{background:var(--bg);-webkit-text-size-adjust:100%;padding-top:env(safe-area-inset-top,0px)}
@@ -67,7 +76,8 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 #monthLabel,#mvLabel{font-weight:600;font-size:15px;padding:0 6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top-r{display:flex;gap:8px}
 .ib{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);box-shadow:var(--shadow);flex:none}
-.ib:active{transform:scale(.96)}
+.ib{transition:transform .2s var(--spring),background .2s,color .2s}
+.ib:active{transform:scale(.9)}
 .ib[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .search-wrap{overflow:hidden;max-height:0;transition:max-height .2s ease}
 .search-wrap.open{max-height:64px}
@@ -155,7 +165,8 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
   padding:14px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px));
   background:linear-gradient(to top,var(--bg) 55%,transparent)}
 .add{pointer-events:auto;max-width:528px;margin:0 auto;width:100%;height:56px;border-radius:18px;background:var(--dock-btn);color:var(--dock-ink);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:16px;box-shadow:0 10px 30px rgba(14,17,22,.25)}
-.add:active{transform:scale(.985)}
+.add{transition:transform .25s var(--spring),box-shadow .25s}
+.add:active{transform:scale(.97);box-shadow:0 4px 14px rgba(14,17,22,.22)}
 
 /* Pantalla Movimientos */
 .view{position:fixed;inset:0;z-index:20;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:env(safe-area-inset-top,0px);
@@ -176,7 +187,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .scrim{position:fixed;inset:0;background:var(--scrim);z-index:40;opacity:0;transition:opacity .22s}
 .scrim.show{opacity:1}
 .sheet{position:fixed;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:41;background:var(--surface);border-radius:26px 26px 0 0;
-  overflow-y:auto;overscroll-behavior:contain;transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+  overflow-y:auto;overscroll-behavior:contain;transform:translateY(105%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
 .sheet.small{top:auto;max-height:calc(100% - env(safe-area-inset-top,0px) - 10px)}
 .sheet.show{transform:none}
 .sheet-in{max-width:560px;min-height:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px;
@@ -280,3 +291,73 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 #loadingScreen .spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.sheet,.view,.scrim,.toast,.search-wrap,.cmp div{transition:none}.amount .v .caret{animation:none}}
+
+/* ===== Selector de tema (Ajustes → Apariencia) ===== */
+.appearance{padding:14px 14px 16px!important}
+.tgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tcard{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-size:13px;font-weight:500;color:var(--muted);transition:color .2s}
+.tcard .tl{transition:color .2s}
+.tcard[aria-pressed="true"]{color:var(--ink);font-weight:600}
+.tprev{display:block;position:relative;width:100%;height:68px;border-radius:13px;overflow:hidden;border:1px solid var(--line);background:var(--pb);
+  transition:transform .25s var(--spring),box-shadow .25s var(--ease)}
+.tprev.l{--pb:#F4F5F7;--ps:#FFFFFF;--pi:#0E1116;--pa:var(--acc-l)}
+.tprev.d{--pb:#0B0D11;--ps:#1B1F27;--pi:#F2F4F7;--pa:var(--acc-d)}
+.tprev::before{content:"";position:absolute;left:10px;top:10px;width:34px;height:7px;border-radius:4px;background:var(--pi);opacity:.9}
+.tprev::after{content:"";position:absolute;left:8px;right:8px;bottom:8px;height:28px;border-radius:9px;background:var(--ps)}
+.tprev i{position:absolute;z-index:1;left:17px;bottom:14px;width:34px;height:16px;
+  background:linear-gradient(var(--pa),var(--pa)) 0 100%/6px 45% no-repeat,linear-gradient(var(--pa),var(--pa)) 10px 100%/6px 80% no-repeat,
+  linear-gradient(var(--pa),var(--pa)) 20px 100%/6px 60% no-repeat,linear-gradient(var(--pa),var(--pa)) 30px 100%/4px 100% no-repeat;border-radius:2px}
+.tprev.a{background:none;border-color:var(--line)}
+.tprev.a>.tprev{position:absolute;inset:0;border:0;border-radius:0;height:auto}
+.tprev.a>.tprev.d{clip-path:polygon(100% 0,100% 100%,0 100%)}
+.tcard:active .tprev{transform:scale(.95)}
+.tcard[aria-pressed="true"] .tprev{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.alabel{font-size:12.5px;font-weight:600;color:var(--muted);margin:16px 2px 10px}
+.swatches{display:flex;justify-content:space-between;gap:6px}
+.swatch{position:relative;width:38px;height:38px;border-radius:50%;background:var(--sl);flex:none;
+  transition:transform .3s var(--spring),box-shadow .3s var(--ease)}
+.swatch::after{content:"";position:absolute;left:50%;top:50%;width:11px;height:6px;margin:-5px 0 0 -5.5px;border-left:2.4px solid #fff;border-bottom:2.4px solid #fff;
+  transform:rotate(-45deg) scale(0);transition:transform .3s var(--spring)}
+.swatch:active{transform:scale(.88)}
+.swatch[aria-pressed="true"]{box-shadow:0 0 0 2.5px var(--surface),0 0 0 4.5px var(--sl)}
+.swatch[aria-pressed="true"]::after{transform:rotate(-45deg) scale(1)}
+.swatch[data-acento="grafito"]::after{border-color:#fff}
+
+/* Fundido suave al cambiar de tema o de color (solo mientras cambia) */
+html.theming,html.theming *,html.theming *::before,html.theming *::after{
+  transition:background-color .4s ease,color .4s ease,border-color .4s ease,fill .4s ease,stroke .4s ease,box-shadow .4s ease!important}
+
+/* ===== Animaciones ===== */
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes numIn{from{opacity:0;transform:translateY(.28em);filter:blur(5px)}to{opacity:1;transform:none;filter:none}}
+@keyframes grow{from{clip-path:inset(100% 0 0 0);opacity:.3}to{clip-path:inset(0);opacity:1}}
+@keyframes growx{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0)}}
+@keyframes sweep{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+/* Al abrir la app, las tarjetas entran en cascada */
+#home.enter>*{animation:rise .65s var(--ease) both}
+#home.enter>:nth-child(2){animation-delay:.04s}
+#home.enter>:nth-child(3){animation-delay:.09s}
+#home.enter>:nth-child(4){animation-delay:.15s}
+#home.enter>:nth-child(5){animation-delay:.21s}
+#home.enter>:nth-child(6){animation-delay:.27s}
+#home.enter>:nth-child(7){animation-delay:.33s}
+/* Al cambiar de mes o año, el total, las barras y las listas se vuelven a dibujar */
+.total.anim>*{animation:numIn .6s var(--ease) both}
+.total.anim>.cent{animation-delay:.06s}
+.total.anim>.eur{animation-delay:.1s}
+.pills.anim>*{animation:rise .5s var(--ease) both;animation-delay:calc(var(--i,0)*60ms + 120ms)}
+.bars.anim>.bar{animation:grow .7s var(--ease) both;animation-delay:calc(var(--i,0)*14ms)}
+.stack.anim>i{animation:growx .7s var(--ease) both;animation-delay:calc(var(--i,0)*70ms)}
+.list.anim>.item,.list.anim>.day,.cats.anim>.cat-row{animation:sweep .5s var(--ease) both;animation-delay:calc(min(var(--i,0),12)*32ms)}
+.item,.cat-row{transition:background-color .15s}
+.chip .cic{transition:transform .25s var(--spring),border-color .2s}
+.chip:active .cic{transform:scale(.92)}
+.key{transition:background-color .12s,transform .15s var(--spring)}
+.key:active{transform:scale(.92)}
+.bar .fill,.bar .cap{transition:opacity .2s}
+.toast{transition:opacity .25s,transform .35s var(--spring)}
+@media (prefers-reduced-motion:reduce){
+  #home.enter>*,.total.anim>*,.pills.anim>*,.bars.anim>.bar,.stack.anim>i,.list.anim>*,.cats.anim>*{animation:none!important}
+  .tprev,.swatch,.swatch::after,.add,.ib,.chip .cic,.key{transition:none}
+  html.theming,html.theming *{transition:none!important}
+}

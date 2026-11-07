@@ -17,7 +17,8 @@
 - **Sincronización en la nube**: opcional con Google, tus datos siempre a salvo
 - **Sin registro obligatorio**: úsala sin cuenta y sincroniza cuando quieras
 - **PWA instalable**: ponla en la pantalla de inicio como una app nativa
-- **Modo oscuro**: automático o elegido en Ajustes
+- **Temas**: automático, claro u oscuro, con vista previa, y 6 colores de acento a elegir en Ajustes → Apariencia
+- **Animaciones suaves**: entrada en cascada, barras y totales que se dibujan al cambiar de mes, fundido al cambiar de tema (se desactivan con «Reducir movimiento»)
 - **Búsqueda inteligente**: ignora tildes y mayúsculas
 - **Resumen mensual y anual**: ve en qué te gastas el dinero
 - **Exportar a CSV / JSON**: llévate tus datos donde quieras
@@ -110,9 +111,11 @@ control-finanzas/
 
 **Categorías de ingreso:** edita `INCOME_CATS` en `utils.js`.
 
-**Colores:** cada categoría lleva un color (`--c0`…`--c10` para gastos e `--i0`…`--i4` para ingresos, en `style.css`).
+**Colores de acento:** están al principio de `style.css` (`:root[data-accent="…"]`); para añadir uno, copia una línea con sus 4 valores y añade su botón en `index.html`.
 
-**Después de cambiar archivos:** sube la versión del caché en `sw.js` (`mis-gastos-v24`, `v25`…) para que los móviles cojan los cambios.
+**Colores de categoría:** cada categoría lleva un color (`--c0`…`--c10` para gastos e `--i0`…`--i4` para ingresos, en `style.css`).
+
+**Después de cambiar archivos:** sube la versión del caché en `sw.js` (`control-finanzas-v16`, `v17`…) para que los móviles cojan los cambios.
 
 ---
 

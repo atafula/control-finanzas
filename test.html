@@ -539,6 +539,25 @@ async function runAppTests(){
   await T("tema oscuro y claro desde Ajustes",{firebase:false},async A=>{
     await A.click("settingsBtn");await A.click(A.d.querySelector('[data-tema="dark"]'));eq("oscuro",A.d.documentElement.dataset.theme,"dark");
     eq("se recuerda",A.store()["mis-gastos-tema"],"dark");await A.click(A.d.querySelector('[data-tema="auto"]'));ok("automático",!A.d.documentElement.hasAttribute("data-theme"));});
+  await T("color de la barra del navegador sigue al tema",{firebase:false},async A=>{
+    A.d.head.insertAdjacentHTML("beforeend",'<meta name="theme-color" content="#F4F5F7" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0B0D11" media="(prefers-color-scheme: dark)">');
+    eq("hay dos",A.d.querySelectorAll('meta[name="theme-color"]').length,2);
+    await A.click("settingsBtn");await A.click(A.d.querySelector('[data-tema="dark"]'));
+    ok("oscuro",[...A.d.querySelectorAll('meta[name="theme-color"]')].every(m=>m.content.toUpperCase()==="#0B0D11"));
+    await A.click(A.d.querySelector('[data-tema="light"]'));
+    ok("claro",[...A.d.querySelectorAll('meta[name="theme-color"]')].every(m=>m.content.toUpperCase()==="#F4F5F7"));
+    await A.click(A.d.querySelector('[data-tema="auto"]'));
+    ok("automático recupera los originales",[...A.d.querySelectorAll('meta[name="theme-color"]')].some(m=>m.content.toUpperCase()==="#0B0D11")&&[...A.d.querySelectorAll('meta[name="theme-color"]')].some(m=>m.content.toUpperCase()==="#F4F5F7"));});
+  await T("color de acento desde Ajustes",{firebase:false},async A=>{
+    await A.click("settingsBtn");await A.click(A.d.querySelector('[data-acento="violeta"]'));
+    eq("violeta",A.d.documentElement.dataset.accent,"violeta");eq("se recuerda",A.store()["mis-gastos-acento"],"violeta");
+    ok("marcado",A.d.querySelector('[data-acento="violeta"]').getAttribute("aria-pressed")==="true");
+    ok("el anterior se desmarca",A.d.querySelector('[data-acento="azul"]').getAttribute("aria-pressed")==="false");
+    await A.click(A.d.querySelector('[data-acento="azul"]'));ok("azul no lleva atributo",!A.d.documentElement.hasAttribute("data-accent"));});
+  await T("acento guardado se aplica al abrir",{firebase:false,store:{"mis-gastos-acento":"rosa"}},async A=>{eq("rosa",A.d.documentElement.dataset.accent,"rosa");
+    ok("marcado en Ajustes",A.d.querySelector('[data-acento="rosa"]').getAttribute("aria-pressed")==="true");});
+  await T("acento desconocido vuelve al azul",{firebase:false,store:{"mis-gastos-acento":"zzz"}},async A=>{ok("sin atributo",!A.d.documentElement.hasAttribute("data-accent"));
+    ok("azul marcado",A.d.querySelector('[data-acento="azul"]').getAttribute("aria-pressed")==="true");});
   await T("importar conserva ingresos, extraordinarios y fijos",{firebase:false},async A=>{
     await A.importFile([{...I("i","Paga",400,"Paga"),fijo:"f1"},{...G("a","Tele",300,"Otros"),extra:true}]);
     const L=Object.fromEntries(A.local().map(g=>[g.id,g]));eq("ingreso",[L.i.tipo,L.i.fijo],["ingreso","f1"]);eq("extra",L.a.extra,true);
